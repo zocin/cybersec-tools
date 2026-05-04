@@ -1,0 +1,232 @@
+{
+  ".\\file_integrity.py": {
+    "hash": "fef4603f67222279c8f5cbcfeb99d151dd046690412263e01a36004793cc7eb9",
+    "tamanio": 3764,
+    "fecha": "2026-05-04T03:47:27.563260"
+  },
+  ".\\ip_lookup.py": {
+    "hash": "0eb871cdd365e8e362f081ee232bd13b2751b046d0bca93c96d23cf4f55092ea",
+    "tamanio": 3043,
+    "fecha": "2026-05-04T03:47:27.563678"
+  },
+  ".\\phishing_detector.py": {
+    "hash": "49bd1a76cb0045a794898ad9e4b5d1d6ed5173ff8cfc477549ce47bcc13a5263",
+    "tamanio": 3857,
+    "fecha": "2026-05-04T03:47:27.563889"
+  },
+  ".\\.git\\.MERGE_MSG.swp": {
+    "hash": "0093f0338442cbf0990393b8feadd0d88efc8ab90d3548598c2f464384c96220",
+    "tamanio": 12288,
+    "fecha": "2026-05-04T03:47:27.564741"
+  },
+  ".\\.git\\COMMIT_EDITMSG": {
+    "hash": "653de4baab261b6f7634908628f1ffb62ccc40ed36f4c4852569a67c10b9ad48",
+    "tamanio": 23,
+    "fecha": "2026-05-04T03:47:27.572070"
+  },
+  ".\\.git\\config": {
+    "hash": "c71f8e497800f6ec673ea1abec235c6b64ef0350ba3555b410b941fc67cd68ee",
+    "tamanio": 244,
+    "fecha": "2026-05-04T03:47:27.572505"
+  },
+  ".\\.git\\description": {
+    "hash": "85ab6c163d43a17ea9cf7788308bca1466f1b0a8d1cc92e26e9bf63da4062aee",
+    "tamanio": 73,
+    "fecha": "2026-05-04T03:47:27.582792"
+  },
+  ".\\.git\\FETCH_HEAD": {
+    "hash": "1437919794aad5f6a914056d02a92ece58873a648b15fb0488cadeaa369d5573",
+    "tamanio": 99,
+    "fecha": "2026-05-04T03:47:27.603298"
+  },
+  ".\\.git\\HEAD": {
+    "hash": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+    "tamanio": 21,
+    "fecha": "2026-05-04T03:47:27.603712"
+  },
+  ".\\.git\\index": {
+    "hash": "2ccbb927272be0c407592aa91060204746c60db196f2520441cad160e4fbccb6",
+    "tamanio": 233,
+    "fecha": "2026-05-04T03:47:27.616417"
+  },
+  ".\\.git\\ORIG_HEAD": {
+    "hash": "7ab851e26d72efb786c2ee6a11436e1e57dd47ece2659bda8f6bfe2145c22775",
+    "tamanio": 41,
+    "fecha": "2026-05-04T03:47:27.617767"
+  },
+  ".\\.git\\hooks\\applypatch-msg.sample": {
+    "hash": "0223497a0b8b033aa58a3a521b8629869386cf7ab0e2f101963d328aa62193f7",
+    "tamanio": 478,
+    "fecha": "2026-05-04T03:47:27.629325"
+  },
+  ".\\.git\\hooks\\commit-msg.sample": {
+    "hash": "efc1401b0e99d1ff51494d154d98b46c1e99059bcd8bf9f73cecde19fd3eb23b",
+    "tamanio": 1972,
+    "fecha": "2026-05-04T03:47:27.638505"
+  },
+  ".\\.git\\hooks\\fsmonitor-watchman.sample": {
+    "hash": "9159720099ad5595b8e66645cbfd47763c1e920f46e0b50ae75e642bbec57ef0",
+    "tamanio": 4611,
+    "fecha": "2026-05-04T03:47:27.661324"
+  },
+  ".\\.git\\hooks\\post-update.sample": {
+    "hash": "81765af2daef323061dcbc5e61fc16481cb74b3bac9ad8a174b186523586f6c5",
+    "tamanio": 189,
+    "fecha": "2026-05-04T03:47:27.668304"
+  },
+  ".\\.git\\hooks\\pre-applypatch.sample": {
+    "hash": "e15c5b469ea3e0a695bea6f2c82bcf8e62821074939ddd85b77e0007ff165475",
+    "tamanio": 424,
+    "fecha": "2026-05-04T03:47:27.679429"
+  },
+  ".\\.git\\hooks\\pre-commit.sample": {
+    "hash": "57185b7b9f05239d7ab52db045f5b89eb31348d7b2177eab214f5eb872e1971b",
+    "tamanio": 1649,
+    "fecha": "2026-05-04T03:47:27.687915"
+  },
+  ".\\.git\\hooks\\pre-merge-commit.sample": {
+    "hash": "d3825a70337940ebbd0a5c072984e13245920cdf8898bd225c8d27a6dfc9cb53",
+    "tamanio": 416,
+    "fecha": "2026-05-04T03:47:27.697535"
+  },
+  ".\\.git\\hooks\\pre-push.sample": {
+    "hash": "ecce9c7e04d3f5dd9d8ada81753dd1d549a9634b26770042b58dda00217d086a",
+    "tamanio": 1374,
+    "fecha": "2026-05-04T03:47:27.706558"
+  },
+  ".\\.git\\hooks\\pre-rebase.sample": {
+    "hash": "4febce867790052338076f4e66cc47efb14879d18097d1d61c8261859eaaa7b3",
+    "tamanio": 4898,
+    "fecha": "2026-05-04T03:47:27.733289"
+  },
+  ".\\.git\\hooks\\pre-receive.sample": {
+    "hash": "a4c3d2b9c7bb3fd8d1441c31bd4ee71a595d66b44fcf49ddb310252320169989",
+    "tamanio": 544,
+    "fecha": "2026-05-04T03:47:27.750307"
+  },
+  ".\\.git\\hooks\\prepare-commit-msg.sample": {
+    "hash": "e9ddcaa4189fddd25ed97fc8c789eca7b6ca16390b2392ae3276f0c8e1aa4619",
+    "tamanio": 1492,
+    "fecha": "2026-05-04T03:47:27.767985"
+  },
+  ".\\.git\\hooks\\push-to-checkout.sample": {
+    "hash": "a53d0741798b287c6dd7afa64aee473f305e65d3f49463bb9d7408ec3b12bf5f",
+    "tamanio": 2783,
+    "fecha": "2026-05-04T03:47:27.792856"
+  },
+  ".\\.git\\hooks\\sendemail-validate.sample": {
+    "hash": "44ebfc923dc5466bc009602f0ecf067b9c65459abfe8868ddc49b78e6ced7a92",
+    "tamanio": 2308,
+    "fecha": "2026-05-04T03:47:27.815223"
+  },
+  ".\\.git\\hooks\\update.sample": {
+    "hash": "8d5f2fa83e103cf08b57eaa67521df9194f45cbdbcb37da52ad586097a14d106",
+    "tamanio": 3650,
+    "fecha": "2026-05-04T03:47:27.837979"
+  },
+  ".\\.git\\info\\exclude": {
+    "hash": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1",
+    "tamanio": 240,
+    "fecha": "2026-05-04T03:47:27.838863"
+  },
+  ".\\.git\\logs\\HEAD": {
+    "hash": "3005a8d4bbd3033746a61566db4e54f0e90c72002556547b65af2f9f394a9e22",
+    "tamanio": 857,
+    "fecha": "2026-05-04T03:47:27.857453"
+  },
+  ".\\.git\\logs\\refs\\heads\\main": {
+    "hash": "b0798b6cdca24ef112d5446f69b586152cf08573d50fa111b8557def032731fd",
+    "tamanio": 522,
+    "fecha": "2026-05-04T03:47:27.877482"
+  },
+  ".\\.git\\logs\\refs\\remotes\\origin\\main": {
+    "hash": "e14040d83ecf6ed8bc86d9abed60c4598e64cd61f622e4c12420cc267854a342",
+    "tamanio": 479,
+    "fecha": "2026-05-04T03:47:27.894228"
+  },
+  ".\\.git\\objects\\0f\\91f912fcb05d41b56bf3ecc690128e28947520": {
+    "hash": "00d8e96bdedd669b4baa89a1c86737bed94aa26068e3407c5ebb333758a4239b",
+    "tamanio": 173,
+    "fecha": "2026-05-04T03:47:27.911955"
+  },
+  ".\\.git\\objects\\36\\35d92ca25b3afd77f1800ab351ad4ce51af69a": {
+    "hash": "72948174db550bb0969d48f6b9398a79f659781b0843cc270c029c58cd48a3ed",
+    "tamanio": 132,
+    "fecha": "2026-05-04T03:47:27.926422"
+  },
+  ".\\.git\\objects\\3c\\7f7b7741384ff45d957d37c995425a8be3092a": {
+    "hash": "4c08d03f0958ff06a9c83840cbd0e9b3961f346156519e80c41cdc9c3566316f",
+    "tamanio": 145,
+    "fecha": "2026-05-04T03:47:27.938642"
+  },
+  ".\\.git\\objects\\44\\ffbb0203214f3ff1679ae168c9c9dbdebd264b": {
+    "hash": "ea5a36f06e5c4102a796ea431cf37ee18b54a54407ba38de9dcbea08e85d010b",
+    "tamanio": 165,
+    "fecha": "2026-05-04T03:47:27.949970"
+  },
+  ".\\.git\\objects\\48\\fe3c1c0e4489b9c783cc406035637bdc42e587": {
+    "hash": "01ff65dcf3820689e2493ab053044617459b23f01487a88eeb827d0f7096bb48",
+    "tamanio": 1581,
+    "fecha": "2026-05-04T03:47:27.961871"
+  },
+  ".\\.git\\objects\\4e\\f70514d71d611eb1adb8165476214b4553a042": {
+    "hash": "104293209cf4e5587015afcfa558a8e87ac4d4821dfdc343d403ce5cad6d3450",
+    "tamanio": 517,
+    "fecha": "2026-05-04T03:47:27.971156"
+  },
+  ".\\.git\\objects\\5a\\1e202e78e890c0dbbb471752f7e001cab84ce7": {
+    "hash": "a8e1c189acd61be82e24a807e181886864495538a9e508b767c4a0926870748d",
+    "tamanio": 98,
+    "fecha": "2026-05-04T03:47:27.983670"
+  },
+  ".\\.git\\objects\\7b\\b2f3ecfa6fa84ac3742c0e46f72a3ca0cb6d4a": {
+    "hash": "609decbefff23466bd66763f09bfe3727f52dd6e46b45a54f8fbc9e399d57438",
+    "tamanio": 919,
+    "fecha": "2026-05-04T03:47:27.993254"
+  },
+  ".\\.git\\objects\\7f\\a309678bfc569a12d1ddefc0e24811ede43230": {
+    "hash": "9b6637529b51c921c6e9a6a125e260db0546f03fc01b32bbfaf96e294f5fdf14",
+    "tamanio": 205,
+    "fecha": "2026-05-04T03:47:28.001513"
+  },
+  ".\\.git\\objects\\83\\8c3fff63948c13901325e968f01dcef5783342": {
+    "hash": "d55fc7dbf1891944fc679e0498ee8ba112727090035b195c95f3215f1e3e0e78",
+    "tamanio": 1245,
+    "fecha": "2026-05-04T03:47:28.010897"
+  },
+  ".\\.git\\objects\\94\\dea93256969b2d7e8c8a901a217c2a4bcf6dbb": {
+    "hash": "8f75538ce2a0d28efecfb30a82e40c6713290f3b84fafa8807b5700f987c11ad",
+    "tamanio": 171,
+    "fecha": "2026-05-04T03:47:28.018086"
+  },
+  ".\\.git\\objects\\99\\4cba753b76d89e44687fcd54244acf6e4e8c6c": {
+    "hash": "994fc5c085a78ba3ff3aaf444b03f752abc2ace95ee819b0a5fd7c2ab03e511d",
+    "tamanio": 1269,
+    "fecha": "2026-05-04T03:47:28.029995"
+  },
+  ".\\.git\\objects\\d7\\2ac99aed0430f5ad90bd98b3ef2b98bf881010": {
+    "hash": "917c0c6c7842470dcd80e91f529a982c3ca1a588d68dca9117f985d7b6ef4164",
+    "tamanio": 1012,
+    "fecha": "2026-05-04T03:47:28.038549"
+  },
+  ".\\.git\\objects\\dd\\6ea8c232de421cb6aba9f6e8e6edcec2205acd": {
+    "hash": "aaea85207a493a03cffea249fa6780f5bc7fe9fe0465e288cb2af74ea5d82b3b",
+    "tamanio": 64,
+    "fecha": "2026-05-04T03:47:28.049035"
+  },
+  ".\\.git\\objects\\e5\\93bc63c7c73fbf46692a33414a54620bb06a90": {
+    "hash": "1e6b38cef3116fc2327222321be0d4b9e6bcaf7c90562c7edd9ff852382a1d09",
+    "tamanio": 147,
+    "fecha": "2026-05-04T03:47:28.057488"
+  },
+  ".\\.git\\refs\\heads\\main": {
+    "hash": "f9e913501a39227666b3bf4471685b50fc678f495bd1b74e2631fd177f7ee9c3",
+    "tamanio": 41,
+    "fecha": "2026-05-04T03:47:28.058896"
+  },
+  ".\\.git\\refs\\remotes\\origin\\main": {
+    "hash": "f9e913501a39227666b3bf4471685b50fc678f495bd1b74e2631fd177f7ee9c3",
+    "tamanio": 41,
+    "fecha": "2026-05-04T03:47:28.060746"
+  }
+}
