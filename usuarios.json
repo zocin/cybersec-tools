@@ -1,0 +1,14 @@
+{
+  "andres": {
+    "hash": "1cd6d78e90c2ea653b7692bb5348751709d7b2d9694d2d05122914abab511f3e",
+    "salt": "d539483fec63fc86421749d227d9b55434f0b4c70247100d52f54fed92a3b4e0",
+    "fecha_registro": "2026-05-08T02:16:43.506328",
+    "intentos_fallidos": 3
+  },
+  "admin": {
+    "hash": "e2a8184681d49b9dbadbd44fa2dc68ddce2ef167d53ff00daa18e221c0d9a97a",
+    "salt": "0395708db4eb87d7fa2c87fd23607e8fe4a9ad4b67ef3020b267b68e19eda905",
+    "fecha_registro": "2026-05-08T02:16:44.658042",
+    "intentos_fallidos": 0
+  }
+}
