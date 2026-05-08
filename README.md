@@ -59,7 +59,37 @@ Sistema de autenticación de dos factores con OTP.
 - Verificación con hashing de contraseña
 - Simulación completa del flujo 2FA
 
+
+### 8. Caesar Cipher Encryption Tool (`caesar_cipher.py`)
+Herramienta de cifrado y descifrado usando el algoritmo César.
+- Cifrado con desplazamiento configurable
+- Descifrado automático
+- Demostración de ataque por fuerza bruta
+- Explicación de por qué es inseguro hoy en día
+
+### 9. Login System with Hashing (`login_system.py`)
+Sistema de autenticación seguro con hashing de contraseñas.
+- PBKDF2 con SHA-256 y 100,000 iteraciones
+- Salt único por usuario
+- Bloqueo tras 3 intentos fallidos
+- Nunca almacena contraseñas en texto plano
+
+### 10. Brute Force Simulation (`brute_force.py`)
+Simulación educativa de ataques de fuerza bruta y diccionario.
+- Ataque por fuerza bruta pura
+- Ataque por diccionario
+- Demostración de contraseñas débiles vs fuertes
+- Solo para uso educativo en entornos controlados
+
+### 11. Keylogger Educacional (`keylogger_edu.py`)
+Keylogger educativo para entender cómo funcionan estas amenazas.
+- Captura de teclas en tiempo real
+- Registro en archivo de log
+- Detención con tecla ESC
+- Incluye contramedidas de defensa empresarial
+- SOLO para uso educativo en equipos propios
 ---
+
 
 ## 💼 Servicios disponibles
 
