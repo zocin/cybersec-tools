@@ -63,4 +63,4 @@ Audita cabeceras de seguridad HTTP de cualquier sitio web.
 python scanner.py
 python password_checker.py
 python web_security_checker.py
-```
+``gs

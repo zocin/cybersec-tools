@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="es" data-lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYX POLARIS // Ciberseguridad Web</title>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECURITY HEADERS (via <meta> — complementan headers del servidor)
+     ══════════════════════════════════════════════════════════════ -->
+
+<!-- [FIX 1] Content Security Policy
+     Bloquea XSS, injection y carga de recursos no autorizados.
+     - default-src 'self': solo recursos del mismo origen
+     - script-src 'self' 'nonce-{TOKEN}': solo scripts con nonce válido
+     - style-src: permite Google Fonts y estilos inline necesarios
+     - img-src: datos inline (canvas) y mismo origen
+     - connect-src 'none': sin fetch/XHR externos
+     - object-src 'none': bloquea Flash/plugins
+     - base-uri 'self': previene base-tag injection
+     - form-action 'none': no hay formularios, bloquea redirects
+-->
+<meta http-equiv="Content-Security-Policy"
+  content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data:;
+    connect-src 'none';
+    object-src 'none';
+    base-uri 'self';
+    form-action 'none';
+    frame-ancestors 'none';
+  ">
+
+<!-- [FIX 2] X-Content-Type-Options
+     Previene MIME-type sniffing (el navegador no adivina el tipo de archivo).
+     Ataque evitado: un atacante no puede servir JS disfrazado de imagen. -->
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+
+<!-- [FIX 3] Referrer Policy
+     Cuando el usuario haga click en un link externo, el navegador
+     NO enviará la URL completa como Referer. Protege privacidad. -->
+<meta name="referrer" content="no-referrer">
+
+<!-- [FIX 4] Permissions Policy
+     Deshabilita acceso a cámara, micrófono, geolocalización y
+     otras APIs del navegador que esta página no necesita. -->
+<meta http-equiv="Permissions-Policy"
+  content="camera=(), microphone=(), geolocation=(), payment=(), usb=()">
+
+<!-- [FIX 5] X-Frame-Options / Clickjacking protection
+     Evita que esta página sea embebida en un iframe de otro sitio
+     (ataque de clickjacking). frame-ancestors 'none' en CSP lo cubre
+     también, esto es la capa de compatibilidad. -->
+<meta http-equiv="X-Frame-Options" content="DENY">
+
+<!-- SEO & descripción -->
+<meta name="description" content="NYX POLARIS — Ciberseguridad Web. Auditoría web, análisis de vulnerabilidades y automatización de seguridad con Python.">
+<meta name="robots" content="index, follow">
+
+<!-- [FIX 6] Subresource Integrity (SRI) en fuente externa de Google Fonts
+     La etiqueta link usa crossorigin para que el navegador valide
+     que el recurso no fue alterado en tránsito (MITM). -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet" crossorigin="anonymous">
+<style>
+  :root {
+    --black: #000000;
+    --deep: #050505;
+    --dark: #0a0a0a;
+    --orange: #FF6B00;
+    --orange-dim: #cc4400;
+    --orange-glow: #ff8c00;
+    --red: #8B0000;
+    --fog: rgba(255, 107, 0, 0.03);
+    --text: #c8c8c8;
+    --dim: #555;
+    --section-px: clamp(20px, 5vw, 80px);
+    --section-py: clamp(60px, 8vw, 100px);
+    --nav-px: clamp(16px, 4vw, 40px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    overflow-x: hidden;
+  }
+
+  /* Hide custom cursor on touch/mobile */
+  @media (pointer: coarse) {
+    body { cursor: auto; }
+    .cursor, .cursor-dot { display: none; }
+    .btn, .lang-btn, .lang-option, .project-link, .contact-link { cursor: pointer; }
+  }
+  @media (pointer: fine) {
+    body { cursor: none; }
+    .btn, .lang-btn, .lang-option, .project-link, .contact-link { cursor: none; }
+  }
+
+  /* Custom cursor */
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; width: 100%;
+    z-index: 100;
+    padding: 16px var(--nav-px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.95), transparent);
+    border-bottom: 1px solid rgba(255,107,0,0.1);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.3rem, 4vw, 1.8rem);
+    color: var(--orange);
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px var(--orange), 0 0 40px rgba(255,107,0,0.3);
+    animation: flicker 8s infinite;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-logo-icon { font-size: 1.2rem; }
+
+  .nav-links { display: flex; gap: 24px; list-style: none; }
+  .nav-links a {
+    color: var(--dim);
+    text-decoration: none;
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.3s, text-shadow 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .nav-links a:hover {
+    color: var(--orange);
+    text-shadow: 0 0 10px var(--orange);
+  }
+  .nav-links .nav-icon { font-size: 0.8rem; }
+
+  /* Hamburger button */
+  .nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    z-index: 110;
+    margin-right: 60px; /* space for lang selector */
+  }
+  .nav-toggle span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--orange);
+    transition: transform 0.3s, opacity 0.3s;
+    transform-origin: center;
+  }
+  .nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-toggle.open span:nth-child(2) { opacity: 0; }
+  .nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* Mobile nav overlay */
+  @media (max-width: 768px) {
+    .nav-toggle { display: flex; }
+    .nav-links {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.97);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 32px;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      z-index: 105;
+    }
+    .nav-links.open { transform: translateX(0); }
+    .nav-links a {
+      font-size: 1rem;
+      letter-spacing: 4px;
+      gap: 10px;
+    }
+    .nav-links .nav-icon { font-size: 1.1rem; }
+  }
+
+  /* HERO */
+  #hero {
+    position: relative;
+    min-height: 100svh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 10;
+    overflow: hidden;
+    padding: 0 var(--section-px);
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 60%, rgba(139,0,0,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 50% 50%, rgba(255,107,0,0.04) 0%, transparent 60%);
+  }
+
+  .static-lines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px
+    );
+    pointer-events: none;
+    animation: scanline 8s linear infinite;
+    opacity: 0.3;
+  }
+
+  @keyframes scanline {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(4px); }
+  }
+
+  .hero-eyebrow {
+    font-size: clamp(0.55rem, 1.5vw, 0.7rem);
+    letter-spacing: clamp(2px, 1.5vw, 6px);
+    color: var(--orange-dim);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 1s 0.5s forwards;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .hero-flag { font-size: 1.1rem; }
+
+  .hero-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 20vw, 12rem);
+    line-height: 0.9;
+    color: var(--orange);
+    text-shadow:
+      0 0 30px rgba(255,107,0,0.5),
+      0 0 80px rgba(255,107,0,0.2),
+      2px 2px 0 var(--red);
+    letter-spacing: clamp(4px, 2vw, 8px);
+    opacity: 0;
+    animation: fadeUp 1s 0.8s forwards, flicker 12s 3s infinite;
+    position: relative;
+  }
+
+  .hero-name::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 3px; top: 3px;
+    color: var(--red);
+    opacity: 0.4;
+    z-index: -1;
+    animation: glitch 6s infinite;
+  }
+
+  @keyframes glitch {
+    0%, 90%, 100% { transform: translate(0); clip-path: none; }
+    92% { transform: translate(-3px, 1px); clip-path: inset(20% 0 60% 0); }
+    94% { transform: translate(3px, -1px); clip-path: inset(60% 0 20% 0); }
+    96% { transform: translate(-1px, 2px); clip-path: inset(40% 0 40% 0); }
+  }
+
+  .hero-title {
+    font-size: clamp(0.6rem, 2vw, 0.85rem);
+    letter-spacing: clamp(2px, 2vw, 5px);
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-top: 16px;
+    opacity: 0;
+    animation: fadeUp 1s 1.2s forwards;
+  }
+  .hero-title span { color: var(--orange); }
+
+  .hero-divider {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--orange), transparent);
+    margin: 24px auto;
+    opacity: 0;
+    animation: fadeUp 1s 1.5s forwards;
+  }
+
+  .hero-desc {
+    max-width: min(500px, 90vw);
+    font-size: clamp(0.72rem, 2vw, 0.78rem);
+    line-height: 1.8;
+    color: var(--dim);
+    opacity: 0;
+    animation: fadeUp 1s 1.8s forwards;
+  }
+
+  .hero-cta {
+    margin-top: 40px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeUp 1s 2.1s forwards;
+  }
+
+  .btn {
+    padding: 12px 28px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(0.65rem, 2vw, 0.75rem);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--orange);
+    color: var(--black);
+    border: 1px solid var(--orange);
+  }
+  .btn-primary:hover {
+    background: transparent;
+    color: var(--orange);
+    box-shadow: 0 0 20px rgba(255,107,0,0.3), inset 0 0 20px rgba(255,107,0,0.05);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--orange);
+    border: 1px solid rgba(255,107,0,0.4);
+  }
+  .btn-secondary:hover {
+    border-color: var(--orange);
+    box-shadow: 0 0 20px rgba(255,107,0,0.2), inset 0 0 20px rgba(255,107,0,0.05);
+  }
+
+  .scroll-indicator {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    animation: fadeIn 1s 3s forwards;
+  }
+
+  .scroll-indicator span {
+    font-size: 0.6rem;
+    letter-spacing: 4px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--orange), transparent);
+    animation: scrollPulse 2s infinite;
+  }
+
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.2); }
+  }
+
+  @media (max-width: 480px) {
+    .scroll-indicator { display: none; }
+  }
+
+  /* SECTIONS */
+  section {
+    position: relative;
+    z-index: 10;
+    padding: var(--section-py) var(--section-px);
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: clamp(32px, 5vw, 60px);
+    flex-wrap: wrap;
+  }
+
+  .section-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    color: rgba(255,107,0,0.1);
+    line-height: 1;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.5rem);
+    color: var(--text);
+    letter-spacing: 4px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title .sec-icon { font-size: 1.4rem; }
+  .section-title span { color: var(--orange); }
+
+  .section-line {
+    flex: 1;
+    min-width: 40px;
+    height: 1px;
+    background: linear-gradient(to right, rgba(255,107,0,0.3), transparent);
+  }
+
+  /* ABOUT */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(30px, 5vw, 60px);
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .about-grid { grid-template-columns: 1fr; }
+  }
+
+  .about-text p {
+    font-size: clamp(0.78rem, 2vw, 0.85rem);
+    line-height: 2;
+    color: var(--dim);
+    margin-bottom: 20px;
+  }
+  .about-text p strong { color: var(--orange); }
+
+  .about-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .stat-box {
+    border: 1px solid rgba(255,107,0,0.15);
+    padding: clamp(16px, 3vw, 24px);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .stat-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--orange);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .stat-box:hover { border-color: rgba(255,107,0,0.4); }
+  .stat-box:hover::before { opacity: 1; }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    color: var(--orange);
+    display: block;
+    text-shadow: 0 0 20px rgba(255,107,0,0.3);
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  .stat-flag {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* SKILLS */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  @media (max-width: 900px) {
+    .skills-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .skills-grid { grid-template-columns: 1fr; }
+  }
+
+  .skill-card {
+    background: rgba(255,107,0,0.02);
+    border: 1px solid rgba(255,107,0,0.08);
+    padding: clamp(20px, 3vw, 30px);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skill-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,107,0,0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .skill-card:hover { border-color: rgba(255,107,0,0.3); transform: translateY(-2px); }
+  .skill-card:hover::after { opacity: 1; }
+
+  .skill-icon { font-size: 1.5rem; margin-bottom: 12px; }
+  .skill-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    color: var(--orange);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .skill-desc {
+    font-size: 0.72rem;
+    line-height: 1.8;
+    color: var(--dim);
+  }
+
+  /* PROJECTS */
+  .projects-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .project-card {
+    border: 1px solid rgba(255,107,0,0.08);
+    padding: clamp(20px, 3vw, 32px);
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+    gap: 20px;
+    align-items: start;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,107,0,0.01);
+  }
+
+  @media (max-width: 600px) {
+    .project-card {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .project-num { font-size: 1.2rem; }
+    .project-link { text-align: left; }
+  }
+
+  .project-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0;
+    background: linear-gradient(to right, rgba(255,107,0,0.08), transparent);
+    transition: width 0.4s;
+  }
+
+  .project-card:hover { border-color: rgba(255,107,0,0.25); }
+  .project-card:hover::before { width: 100%; }
+
+  .project-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: rgba(255,107,0,0.2);
+    line-height: 1;
+  }
+  .project-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    color: var(--text);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .project-desc {
+    font-size: 0.75rem;
+    line-height: 1.8;
+    color: var(--dim);
+    margin-bottom: 12px;
+  }
+  .project-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag {
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--orange-dim);
+    border: 1px solid rgba(255,107,0,0.2);
+    padding: 3px 10px;
+  }
+  .project-link {
+    color: var(--orange);
+    text-decoration: none;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: text-shadow 0.3s;
+  }
+  .project-link:hover { text-shadow: 0 0 10px var(--orange); }
+
+  /* CERTS */
+  .certs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+  }
+  @media (max-width: 600px) {
+    .certs-grid { grid-template-columns: 1fr; }
+  }
+
+  .cert-item {
+    border: 1px solid rgba(255,107,0,0.08);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.3s;
+    background: rgba(255,107,0,0.01);
+    flex-wrap: wrap;
+  }
+  .cert-item:hover { border-color: rgba(255,107,0,0.25); background: rgba(255,107,0,0.03); }
+
+  .cert-dot {
+    width: 6px; height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px var(--orange);
+  }
+  .cert-name { font-size: 0.78rem; color: var(--text); line-height: 1.4; }
+  .cert-org { font-size: 0.65rem; color: var(--dim); letter-spacing: 1px; }
+  .cert-date { margin-left: auto; font-size: 0.65rem; color: var(--orange-dim); flex-shrink: 0; }
+
+  /* CONTACT */
+  .contact-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(30px, 5vw, 60px);
+    align-items: center;
+  }
+  @media (max-width: 768px) {
+    .contact-wrapper { grid-template-columns: 1fr; }
+  }
+
+  .contact-text h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--text);
+    letter-spacing: 4px;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .contact-text h3 span { color: var(--orange); }
+  .contact-text p { font-size: 0.8rem; line-height: 2; color: var(--dim); }
+
+  .contact-links { display: flex; flex-direction: column; gap: 12px; }
+
+  .contact-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    padding: 14px 18px;
+    border: 1px solid rgba(255,107,0,0.1);
+    transition: all 0.3s;
+  }
+  .contact-link:hover {
+    border-color: var(--orange);
+    background: rgba(255,107,0,0.03);
+    transform: translateX(4px);
+  }
+  @media (max-width: 400px) {
+    .contact-link:hover { transform: none; }
+  }
+
+  .contact-link-icon { font-size: 1.1rem; flex-shrink: 0; width: 26px; text-align: center; }
+  .outlook-icon { width: 22px; height: 22px; flex-shrink: 0; }
+  .contact-link-label {
+    font-size: 0.62rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .contact-link-value {
+    font-size: clamp(0.7rem, 2vw, 0.8rem);
+    color: var(--text);
+    word-break: break-all;
+  }
+  .contact-link-arrow {
+    margin-left: auto;
+    color: var(--orange);
+    font-size: 1rem;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    flex-shrink: 0;
+  }
+  .contact-link:hover .contact-link-arrow { opacity: 1; transform: translateX(4px); }
+
+  /* Email obfuscation box */
+  .contact-email-box {
+    cursor: pointer;
+  }
+  .email-sep {
+    color: var(--orange-dim);
+    font-size: 0.75rem;
+    user-select: none;
+  }
+  .email-hint {
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: var(--orange-dim);
+    margin-top: 3px;
+    opacity: 0.6;
+  }
+  .email-copied {
+    color: #4caf50 !important;
+    opacity: 1 !important;
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 10;
+    border-top: 1px solid rgba(255,107,0,0.08);
+    padding: 24px var(--section-px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  footer span {
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  footer span b { color: var(--orange); }
+
+  /* ── SECURITY AUDIT BADGE ── */
+  .sec-badge {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    z-index: 300;
+    background: rgba(0,0,0,0.9);
+    border: 1px solid rgba(255,107,0,0.3);
+    padding: 6px 12px;
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    color: var(--orange-dim);
+    font-family: 'Share Tech Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+  }
+  @media (max-width: 400px) { .sec-badge { display: none; } }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.8; }
+    97% { opacity: 1; }
+    98% { opacity: 0.6; }
+    99% { opacity: 1; }
+  }
+
+  /* Reduced motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s, transform 0.8s;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  .section-sep {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255,107,0,0.15), transparent);
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 var(--section-px);
+  }
+
+  /* ── RESPONSIVE LANG SELECTOR ── */
+  .lang-selector {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    z-index: 200;
+  }
+  .lang-btn {
+    background: rgba(0,0,0,0.85);
+    border: 1px solid rgba(255,107,0,0.35);
+    color: var(--orange);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 2px;
+    padding: 7px 12px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    user-select: none;
+  }
+  .lang-btn:hover { border-color: var(--orange); box-shadow: 0 0 12px rgba(255,107,0,0.25); }
+  .lang-btn .globe-icon { font-size: 0.85rem; }
+  .lang-btn .arrow { font-size: 0.55rem; transition: transform 0.2s; }
+  .lang-btn.open .arrow { transform: rotate(180deg); }
+
+  .lang-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 170px;
+    background: rgba(5,5,5,0.97);
+    border: 1px solid rgba(255,107,0,0.25);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .lang-dropdown.open { display: block; }
+  .lang-region {
+    font-size: 0.58rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--orange-dim);
+    padding: 9px 14px 3px;
+    border-top: 1px solid rgba(255,107,0,0.1);
+  }
+  .lang-region:first-child { border-top: none; }
+  .lang-option {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+    text-align: left;
+    padding: 9px 14px 9px 20px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .lang-option:hover, .lang-option.active { background: rgba(255,107,0,0.1); color: var(--orange); }
+  .lang-option.active { font-weight: bold; }
+
+  /* Fog canvas */
+  #fog-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.4;
+  }
+  @media (prefers-reduced-motion: reduce) { #fog-canvas { display: none; } }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.15;
+  }
+
+  /* Cursor */
+  .cursor {
+    position: fixed;
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--orange);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, border-color 0.2s;
+    mix-blend-mode: difference;
+  }
+  .cursor-dot {
+    position: fixed;
+    width: 4px; height: 4px;
+    background: var(--orange);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+  }
+</style>
+</head>
+<body>
+
+<canvas id="fog-canvas"></canvas>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- LANGUAGE SELECTOR -->
+<div class="lang-selector">
+  <button class="lang-btn" id="langBtn" aria-haspopup="true" aria-expanded="false" aria-label="Seleccionar idioma">
+    <span class="globe-icon" aria-hidden="true">🌐</span>
+    <span id="langCurrent">ES</span>
+    <span class="arrow" aria-hidden="true">▼</span>
+  </button>
+  <div class="lang-dropdown" id="langDropdown" role="menu">
+    <div class="lang-region" data-i18n="region_americas">Las Américas</div>
+    <button class="lang-option" data-lang-code="en" role="menuitem">English</button>
+    <button class="lang-option active" data-lang-code="es" role="menuitem">Español</button>
+    <button class="lang-option" data-lang-code="pt" role="menuitem">Português</button>
+    <div class="lang-region" data-i18n="region_europe">Europa</div>
+    <button class="lang-option" data-lang-code="de" role="menuitem">Deutsch</button>
+    <button class="lang-option" data-lang-code="fr" role="menuitem">Français</button>
+    <button class="lang-option" data-lang-code="it" role="menuitem">Italiano</button>
+    <button class="lang-option" data-lang-code="ru" role="menuitem">Русский</button>
+    <button class="lang-option" data-lang-code="pl" role="menuitem">Polski</button>
+    <button class="lang-option" data-lang-code="ar" role="menuitem">اللغة العربية</button>
+  </div>
+</div>
+
+<nav>
+  <div class="nav-logo">
+    <span class="nav-logo-icon">🔐</span>NYX POLARIS
+  </div>
+  <!-- Hamburger for mobile -->
+  <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="navLinks">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links" id="navLinks" role="list">
+    <li><a href="#about"><span class="nav-icon">👤</span><span data-i18n="nav_about">Perfil</span></a></li>
+    <li><a href="#skills"><span class="nav-icon">⚙️</span><span data-i18n="nav_skills">Skills</span></a></li>
+    <li><a href="#projects"><span class="nav-icon">🛠️</span><span data-i18n="nav_projects">Proyectos</span></a></li>
+    <li><a href="#certs"><span class="nav-icon">🎓</span><span data-i18n="nav_certs">Certs</span></a></li>
+    <li><a href="#contact"><span class="nav-icon">📡</span><span data-i18n="nav_contact">Contacto</span></a></li>
+  </ul>
+</nav>
+
+<!-- Security badge -->
+<div class="sec-badge" aria-hidden="true">🛡️ SECURED // CSP + SRI + NOSNIFF + TABNAPPING PROTECTION</div>
+
+<!-- HERO -->
+<section id="hero" style="padding:0; max-width:100%">
+  <div class="hero-bg"></div>
+  <div class="static-lines"></div>
+  <p class="hero-eyebrow">
+    <span data-i18n="hero_eyebrow">// Analista en Ciberseguridad</span>
+  </p>
+  <h1 class="hero-name" data-text="NYX POLARIS">NYX POLARIS</h1>
+  <p class="hero-title" data-i18n="hero_title">Seguridad Web <span>//</span> Auditoría <span>//</span> Python</p>
+  <div class="hero-divider"></div>
+  <p class="hero-desc" data-i18n="hero_desc">Identifico vulnerabilidades antes de que otros las exploten. Analista junior con visión ofensiva y enfoque defensivo.</p>
+  <div class="hero-cta">
+    <a href="#projects" class="btn btn-primary">🛠️ <span data-i18n="btn_projects">Ver Proyectos</span></a>
+    <a href="#contact" class="btn btn-secondary">📡 <span data-i18n="btn_contact">Contactar</span></a>
+  </div>
+  <div class="scroll-indicator">
+    <span data-i18n="scroll">Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<div style="max-width:1100px; margin:0 auto; padding:0 40px;">
+  <div class="section-sep"></div>
+</div>
+
+<section id="about">
+  <div class="section-header reveal">
+    <div class="section-number">01</div>
+    <h2 class="section-title"><span class="sec-icon">👤</span><span data-i18n="about_title">SOBRE</span> <span data-i18n="about_title2">MÍ</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="about-grid reveal">
+    <div class="about-text">
+      <p data-i18n="about_p1">Estudiante de <strong>Ingeniería en Seguridad de la Información</strong> con más de 6 certificaciones internacionales en ciberseguridad.</p>
+      <p data-i18n="about_p2">Mi enfoque es directo: analizo tu infraestructura, encuentro los puntos débiles y entrego un reporte claro con soluciones concretas.</p>
+      <p data-i18n="about_p3">Especializado en <strong>auditoría web</strong>, análisis de vulnerabilidades, y automatización de seguridad con <strong>Python</strong>.</p>
+    </div>
+    <div class="about-stats">
+      <div class="stat-box">
+        <span class="stat-num">6+</span>
+        <span class="stat-label" data-i18n="stat_certs">Certificaciones</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">3</span>
+        <span class="stat-label" data-i18n="stat_tools">Herramientas propias</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">ISO</span>
+        <span class="stat-label">27001 Auditor</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">6+</span>
+        <span class="stat-label" data-i18n="stat_certs">Certificaciones</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills" style="padding-top:0">
+  <div class="section-header reveal">
+    <div class="section-number">02</div>
+    <h2 class="section-title"><span class="sec-icon">⚙️</span><span data-i18n="skills_title">HABILIDADES</span> <span data-i18n="skills_title2">TÉCNICAS</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="skills-grid reveal">
+    <div class="skill-card">
+      <div class="skill-icon">🔍</div>
+      <div class="skill-name" data-i18n="skill1_name">Auditoría Web</div>
+      <div class="skill-desc" data-i18n="skill1_desc">Análisis de cabeceras HTTP, verificación HTTPS, detección de CSP, HSTS, clickjacking y MIME sniffing.</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">🐍</div>
+      <div class="skill-name">Python</div>
+      <div class="skill-desc" data-i18n="skill2_desc">Automatización de tareas de seguridad, scripts de escaneo, análisis de datos y herramientas de auditoría.</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">🛡️</div>
+      <div class="skill-name" data-i18n="skill3_name">Marcos ISO</div>
+      <div class="skill-desc" data-i18n="skill3_desc">Auditor Interno ISO/IEC 27001:2013. Gestión de riesgos, controles y principios de diseño seguro.</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">🌐</div>
+      <div class="skill-name" data-i18n="skill4_name">Redes</div>
+      <div class="skill-desc" data-i18n="skill4_desc">Seguridad de redes, escaneo de puertos, análisis de tráfico y configuración segura de servicios.</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">🐧</div>
+      <div class="skill-name">Linux</div>
+      <div class="skill-desc" data-i18n="skill5_desc">Administración de sistemas Linux, herramientas de seguridad en terminal, scripting bash.</div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-icon">⛓️</div>
+      <div class="skill-name">Blockchain</div>
+      <div class="skill-desc" data-i18n="skill6_desc">Fundamentos de blockchain, criptomonedas y seguridad en entornos descentralizados.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects" style="padding-top:0">
+  <div class="section-header reveal">
+    <div class="section-number">03</div>
+    <h2 class="section-title"><span class="sec-icon">🛠️</span><span data-i18n="projects_title">PROYECTOS</span> <span>// <span data-i18n="projects_title2">PORTAFOLIO</span></span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="projects-list reveal">
+    <div class="project-card">
+      <div class="project-num">01</div>
+      <div>
+        <div class="project-name" data-i18n="proj1_name">Analizador de Seguridad Web</div>
+        <div class="project-desc" data-i18n="proj1_desc">Herramienta Python que audita sitios web detectando vulnerabilidades en cabeceras HTTP. Verifica HTTPS, CSP, HSTS, X-Frame-Options y protecciones contra clickjacking. Genera reporte con puntuación porcentual de seguridad.</div>
+        <div class="project-tags">
+          <span class="tag">Python</span>
+          <span class="tag">HTTP Security</span>
+          <span class="tag" data-i18n="proj1_tag">Auditoría Web</span>
+        </div>
+      </div>
+      <!-- [FIX 7] rel="noopener noreferrer" en todos los target="_blank"
+           Sin esto, la página destino puede acceder a window.opener
+           y redirigir esta página (ataque tab-napping/reverse tabnapping) -->
+      <a href="https://github.com/zocin" target="_blank" rel="noopener noreferrer" class="project-link" data-i18n="proj_link">Ver código →</a>
+    </div>
+    <div class="project-card">
+      <div class="project-num">02</div>
+      <div>
+        <div class="project-name" data-i18n="proj2_name">Verificador de Contraseñas</div>
+        <div class="project-desc" data-i18n="proj2_desc">Analizador de fortaleza de contraseñas con puntuación de 0 a 7. Detecta contraseñas comunes, analiza complejidad y genera recomendaciones específicas de mejora para cada caso.</div>
+        <div class="project-tags">
+          <span class="tag">Python</span>
+          <span class="tag">Regex</span>
+          <span class="tag">Password Security</span>
+        </div>
+      </div>
+      <a href="https://github.com/zocin" target="_blank" rel="noopener noreferrer" class="project-link" data-i18n="proj_link">Ver código →</a>
+    </div>
+    <div class="project-card">
+      <div class="project-num">03</div>
+      <div>
+        <div class="project-name" data-i18n="proj3_name">Scanner de Puertos</div>
+        <div class="project-desc" data-i18n="proj3_desc">Herramienta de reconocimiento de red que escanea puertos comunes en cualquier host. Identifica servicios expuestos y genera reporte con fecha, hora y estado de cada puerto analizado.</div>
+        <div class="project-tags">
+          <span class="tag">Python</span>
+          <span class="tag">Networking</span>
+          <span class="tag">Recon</span>
+        </div>
+      </div>
+      <a href="https://github.com/zocin" target="_blank" rel="noopener noreferrer" class="project-link" data-i18n="proj_link">Ver código →</a>
+    </div>
+  </div>
+</section>
+
+<!-- CERTS -->
+<section id="certs" style="padding-top:0">
+  <div class="section-header reveal">
+    <div class="section-number">04</div>
+    <h2 class="section-title"><span class="sec-icon">🎓</span><span data-i18n="certs_title">CERTIFICACIONES</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="certs-grid reveal">
+    <div class="cert-item">
+      <div class="cert-dot"></div>
+      <div>
+        <div class="cert-name" data-i18n="cert1_name">Programa Especializado en Ciberseguridad</div>
+        <div class="cert-org">Google — 8 cursos</div>
+      </div>
+    </div>
+    <div class="cert-item">
+      <div class="cert-dot"></div>
+      <div>
+        <div class="cert-name" data-i18n="cert2_name">Introduction to Cybersecurity</div>
+        <div class="cert-org">Cisco</div>
+      </div>
+    </div>
+    <div class="cert-item">
+      <div class="cert-dot"></div>
+      <div>
+        <div class="cert-name" data-i18n="cert3_name">Auditor Interno ISO/IEC 27001:2013</div>
+        <div class="cert-org">ES-CIBER</div>
+      </div>
+    </div>
+    <div class="cert-item">
+      <div class="cert-dot"></div>
+      <div>
+        <div class="cert-name" data-i18n="cert4_name">Ciberseguridad para Microempresas</div>
+        <div class="cert-org">INCIBE</div>
+      </div>
+    </div>
+    <div class="cert-item">
+      <div class="cert-dot"></div>
+      <div>
+        <div class="cert-name" data-i18n="cert6_name">Ciberseguridad</div>
+        <div class="cert-org">U. Distrital Francisco José de Caldas</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" style="padding-top:0">
+  <div class="section-header reveal">
+    <div class="section-number">05</div>
+    <h2 class="section-title"><span class="sec-icon">📡</span><span data-i18n="contact_title">CONTACTO</span></h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="contact-wrapper reveal">
+    <div class="contact-text">
+      <h3 data-i18n="contact_h3">¿TU SITIO <span>ESTÁ</span> SEGURO?</h3>
+      <p data-i18n="contact_p">Ofrezco auditorías básicas de seguridad web para pequeñas y medianas empresas. Precio accesible, reporte detallado, recomendaciones concretas.</p>
+    </div>
+    <div class="contact-links">
+      <!-- Email Outlook — ofuscado con CSS, invisible para scrapers -->
+      <!-- OPSEC: el email se ensambla en JS, nunca aparece en texto plano en el DOM -->
+      <div class="contact-link contact-email-box" id="emailBox" role="button" tabindex="0" aria-label="Copiar email de contacto">
+        <svg class="outlook-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="24" height="24" rx="3" fill="#0078D4"/>
+          <path d="M13 6h7v12h-7V6z" fill="#50E6FF" opacity="0.4"/>
+          <path d="M13 6l7 5-7 5V6z" fill="#50E6FF" opacity="0.7"/>
+          <rect x="4" y="7" width="9" height="10" rx="1.5" fill="white"/>
+          <ellipse cx="8.5" cy="12" rx="2.5" ry="3" fill="#0078D4"/>
+        </svg>
+        <div>
+          <div class="contact-link-label">Email — Outlook</div>
+          <!-- OPSEC: texto renderizado por JS, no scrappeable como texto estático -->
+          <div class="contact-link-value" id="emailDisplay">
+            <span class="email-part" data-p="Nyx_polaris"></span>
+            <span class="email-sep"> [at] </span>
+            <span class="email-part" data-p="outlook.es"></span>
+          </div>
+          <div class="email-hint" id="emailHint">// click para copiar / abrir</div>
+        </div>
+        <span class="contact-link-arrow">→</span>
+      </div>
+      <!-- GitHub — perfil general, NO repo específico -->
+      <a href="https://github.com/zocin" target="_blank" rel="noopener noreferrer" class="contact-link">
+        <span class="contact-link-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#c8c8c8" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+          </svg>
+        </span>
+        <div>
+          <div class="contact-link-label">GitHub</div>
+          <div class="contact-link-value">github.com/zocin</div>
+        </div>
+        <span class="contact-link-arrow">→</span>
+      </a>
+      <!-- LinkedIn -->
+      <a href="https://www.linkedin.com/in/prog-software/" target="_blank" rel="noopener noreferrer" class="contact-link">
+        <span class="contact-link-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#0A66C2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+        </span>
+        <div>
+          <div class="contact-link-label">LinkedIn</div>
+          <div class="contact-link-value">linkedin.com/in/prog-software</div>
+        </div>
+        <span class="contact-link-arrow">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 — <span data-i18n="footer_rights">Todos los derechos reservados</span></span>
+  <span>🔐 <b data-i18n="footer_role">NYX POLARIS</b></span>
+</footer>
+
+<script>
+// ── TRANSLATIONS ──
+const translations = {
+  es: {
+    region_americas: "Las Américas",
+    region_europe: "Europa",
+    nav_about: "Perfil",
+    nav_skills: "Skills",
+    nav_projects: "Proyectos",
+    nav_certs: "Certs",
+    nav_contact: "Contacto",
+    hero_eyebrow: "// Analista en Ciberseguridad",
+    hero_title: "Seguridad Web // Auditoría // Python",
+    hero_desc: "Identifico vulnerabilidades antes de que otros las exploten. Analista junior con visión ofensiva y enfoque defensivo.",
+    btn_projects: "Ver Proyectos",
+    btn_contact: "Contactar",
+    scroll: "Scroll",
+    about_title: "SOBRE",
+    about_title2: "MÍ",
+    about_p1: 'Estudiante de <strong>Ingeniería en Seguridad de la Información</strong> con más de 6 certificaciones internacionales en ciberseguridad.',
+    about_p2: "Mi enfoque es directo: analizo tu infraestructura, encuentro los puntos débiles y entrego un reporte claro con soluciones concretas.",
+    about_p3: 'Especializado en <strong>auditoría web</strong>, análisis de vulnerabilidades, y automatización de seguridad con <strong>Python</strong>.',
+    stat_certs: "Certificaciones",
+    stat_tools: "Herramientas propias",
+    skills_title: "HABILIDADES",
+    skills_title2: "TÉCNICAS",
+    skill1_name: "Auditoría Web",
+    skill1_desc: "Análisis de cabeceras HTTP, verificación HTTPS, detección de CSP, HSTS, clickjacking y MIME sniffing.",
+    skill2_desc: "Automatización de tareas de seguridad, scripts de escaneo, análisis de datos y herramientas de auditoría.",
+    skill3_name: "Marcos ISO",
+    skill3_desc: "Auditor Interno ISO/IEC 27001:2013. Gestión de riesgos, controles y principios de diseño seguro.",
+    skill4_name: "Redes",
+    skill4_desc: "Seguridad de redes, escaneo de puertos, análisis de tráfico y configuración segura de servicios.",
+    skill5_desc: "Administración de sistemas Linux, herramientas de seguridad en terminal, scripting bash.",
+    skill6_desc: "Fundamentos de blockchain, criptomonedas y seguridad en entornos descentralizados.",
+    projects_title: "PROYECTOS",
+    projects_title2: "PORTAFOLIO",
+    proj1_name: "Analizador de Seguridad Web",
+    proj1_desc: "Herramienta Python que audita sitios web detectando vulnerabilidades en cabeceras HTTP. Verifica HTTPS, CSP, HSTS, X-Frame-Options y protecciones contra clickjacking. Genera reporte con puntuación porcentual de seguridad.",
+    proj1_tag: "Auditoría Web",
+    proj2_name: "Verificador de Contraseñas",
+    proj2_desc: "Analizador de fortaleza de contraseñas con puntuación de 0 a 7. Detecta contraseñas comunes, analiza complejidad y genera recomendaciones específicas de mejora para cada caso.",
+    proj3_name: "Scanner de Puertos",
+    proj3_desc: "Herramienta de reconocimiento de red que escanea puertos comunes en cualquier host. Identifica servicios expuestos y genera reporte con fecha, hora y estado de cada puerto analizado.",
+    proj_link: "Ver código →",
+    certs_title: "CERTIFICACIONES",
+    cert1_name: "Programa Especializado en Ciberseguridad",
+    cert2_name: "Introduction to Cybersecurity",
+    cert3_name: "Auditor Interno ISO/IEC 27001:2013",
+    cert4_name: "Ciberseguridad para Microempresas",
+    cert6_name: "Ciberseguridad",
+    contact_title: "CONTACTO",
+    contact_h3: "¿TU SITIO <span>ESTÁ</span> SEGURO?",
+    contact_p: "Ofrezco auditorías básicas de seguridad web para pequeñas y medianas empresas. Precio accesible, reporte detallado, recomendaciones concretas.",
+    footer_rights: "Todos los derechos reservados",
+    footer_role: "NYX POLARIS",
+  },
+  en: {
+    region_americas: "The Americas",
+    region_europe: "Europe",
+    nav_about: "Profile",
+    nav_skills: "Skills",
+    nav_projects: "Projects",
+    nav_certs: "Certs",
+    nav_contact: "Contact",
+    hero_eyebrow: "// Junior Cybersecurity Analyst",
+    hero_title: "Web Security // Auditing // Python",
+    hero_desc: "I find vulnerabilities before others exploit them. Junior analyst with an offensive mindset and defensive focus.",
+    btn_projects: "View Projects",
+    btn_contact: "Contact",
+    scroll: "Scroll",
+    about_title: "ABOUT",
+    about_title2: "ME",
+    about_p1: 'Student of <strong>Information Security Engineering</strong> with 6+ international certifications in cybersecurity.',
+    about_p2: "My approach is direct: I analyze your infrastructure, find the weak spots, and deliver a clear report with concrete solutions.",
+    about_p3: 'Specialized in <strong>web auditing</strong>, vulnerability analysis, and security automation with <strong>Python</strong>.',
+    stat_certs: "Certifications",
+    stat_tools: "Own tools",
+    skills_title: "TECHNICAL",
+    skills_title2: "SKILLS",
+    skill1_name: "Web Auditing",
+    skill1_desc: "HTTP header analysis, HTTPS verification, CSP, HSTS, clickjacking and MIME sniffing detection.",
+    skill2_desc: "Security task automation, scanning scripts, data analysis and auditing tools.",
+    skill3_name: "ISO Frameworks",
+    skill3_desc: "Internal Auditor ISO/IEC 27001:2013. Risk management, controls and secure design principles.",
+    skill4_name: "Networks",
+    skill4_desc: "Network security, port scanning, traffic analysis and secure service configuration.",
+    skill5_desc: "Linux system administration, terminal security tools, bash scripting.",
+    skill6_desc: "Blockchain fundamentals, cryptocurrencies and security in decentralized environments.",
+    projects_title: "PROJECTS",
+    projects_title2: "PORTFOLIO",
+    proj1_name: "Web Security Analyzer",
+    proj1_desc: "Python tool that audits websites detecting HTTP header vulnerabilities. Checks HTTPS, CSP, HSTS, X-Frame-Options and clickjacking protections. Generates a report with a percentage security score.",
+    proj1_tag: "Web Auditing",
+    proj2_name: "Password Checker",
+    proj2_desc: "Password strength analyzer scored from 0 to 7. Detects common passwords, analyzes complexity and generates specific improvement recommendations for each case.",
+    proj3_name: "Port Scanner",
+    proj3_desc: "Network reconnaissance tool that scans common ports on any host. Identifies exposed services and generates a report with date, time and status of each analyzed port.",
+    proj_link: "View code →",
+    certs_title: "CERTIFICATIONS",
+    cert1_name: "Specialized Program in Cybersecurity",
+    cert2_name: "Introduction to Cybersecurity",
+    cert3_name: "Internal Auditor ISO/IEC 27001:2013",
+    cert4_name: "Cybersecurity for Micro-Enterprises",
+    cert6_name: "Cybersecurity",
+    contact_title: "CONTACT",
+    contact_h3: "IS YOUR SITE <span>SECURE</span>?",
+    contact_p: "I offer basic web security audits for small and medium businesses. Affordable pricing, detailed report, concrete recommendations.",
+    footer_rights: "All rights reserved",
+    footer_role: "NYX POLARIS",
+  },
+  pt: {
+    region_americas: "As Américas",
+    region_europe: "Europa",
+    nav_about: "Perfil",
+    nav_skills: "Skills",
+    nav_projects: "Projetos",
+    nav_certs: "Certs",
+    nav_contact: "Contato",
+    hero_eyebrow: "// Analista Junior em Cibersegurança",
+    hero_title: "Segurança Web // Auditoria // Python",
+    hero_desc: "Identifico vulnerabilidades antes que outros as explorem. Analista junior com visão ofensiva e foco defensivo.",
+    btn_projects: "Ver Projetos",
+    btn_contact: "Contatar",
+    scroll: "Scroll",
+    about_title: "SOBRE",
+    about_title2: "MIM",
+    about_p1: 'Estudante de <strong>Engenharia em Segurança da Informação</strong> com mais de 6 certificações internacionais em cibersegurança.',
+    about_p2: "Minha abordagem é direta: analiso sua infraestrutura, encontro os pontos fracos e entrego um relatório claro com soluções concretas.",
+    about_p3: 'Especializado em <strong>auditoria web</strong>, análise de vulnerabilidades e automação de segurança com <strong>Python</strong>.',
+    stat_certs: "Certificações",
+    stat_tools: "Ferramentas próprias",
+    skills_title: "HABILIDADES",
+    skills_title2: "TÉCNICAS",
+    skill1_name: "Auditoria Web",
+    skill1_desc: "Análise de cabeçalhos HTTP, verificação HTTPS, detecção de CSP, HSTS, clickjacking e MIME sniffing.",
+    skill2_desc: "Automação de tarefas de segurança, scripts de varredura, análise de dados e ferramentas de auditoria.",
+    skill3_name: "Marcos ISO",
+    skill3_desc: "Auditor Interno ISO/IEC 27001:2013. Gestão de riscos, controles e princípios de design seguro.",
+    skill4_name: "Redes",
+    skill4_desc: "Segurança de redes, varredura de portas, análise de tráfego e configuração segura de serviços.",
+    skill5_desc: "Administração de sistemas Linux, ferramentas de segurança em terminal, scripting bash.",
+    skill6_desc: "Fundamentos de blockchain, criptomoedas e segurança em ambientes descentralizados.",
+    projects_title: "PROJETOS",
+    projects_title2: "PORTFÓLIO",
+    proj1_name: "Analisador de Segurança Web",
+    proj1_desc: "Ferramenta Python que audita sites detectando vulnerabilidades em cabeçalhos HTTP.",
+    proj1_tag: "Auditoria Web",
+    proj2_name: "Verificador de Senhas",
+    proj2_desc: "Analisador de força de senhas com pontuação de 0 a 7.",
+    proj3_name: "Scanner de Portas",
+    proj3_desc: "Ferramenta de reconhecimento de rede que escaneia portas comuns em qualquer host.",
+    proj_link: "Ver código →",
+    certs_title: "CERTIFICAÇÕES",
+    cert1_name: "Programa Especializado em Cibersegurança",
+    cert2_name: "Introduction to Cybersecurity",
+    cert3_name: "Auditor Interno ISO/IEC 27001:2013",
+    cert4_name: "Cibersegurança para Microempresas",
+    cert6_name: "Cibersegurança",
+    contact_title: "CONTATO",
+    contact_h3: "SEU SITE <span>ESTÁ</span> SEGURO?",
+    contact_p: "Ofereço auditorias básicas de segurança web para pequenas e médias empresas.",
+    footer_rights: "Todos os direitos reservados",
+    footer_role: "NYX POLARIS",
+  },
+  de: {
+    region_americas: "Amerika",
+    region_europe: "Europa",
+    nav_about: "Profil",
+    nav_skills: "Skills",
+    nav_projects: "Projekte",
+    nav_certs: "Zertifikate",
+    nav_contact: "Kontakt",
+    hero_eyebrow: "// Junior-Cybersicherheitsanalyst",
+    hero_title: "Web-Sicherheit // Prüfung // Python",
+    hero_desc: "Ich finde Schwachstellen, bevor andere sie ausnutzen. Junior-Analyst mit offensivem Denken und defensivem Fokus.",
+    btn_projects: "Projekte ansehen",
+    btn_contact: "Kontaktieren",
+    scroll: "Scrollen",
+    about_title: "ÜBER",
+    about_title2: "MICH",
+    about_p1: 'Student der <strong>Informationssicherheitstechnik</strong> mit über 6 internationalen Zertifizierungen in Cybersicherheit.',
+    about_p2: "Mein Ansatz ist direkt: Ich analysiere Ihre Infrastruktur, finde die Schwachpunkte und liefere einen klaren Bericht mit konkreten Lösungen.",
+    about_p3: 'Spezialisiert auf <strong>Web-Auditing</strong>, Schwachstellenanalyse und Sicherheitsautomatisierung mit <strong>Python</strong>.',
+    stat_certs: "Zertifizierungen",
+    stat_tools: "Eigene Tools",
+    skills_title: "TECHNISCHE",
+    skills_title2: "FÄHIGKEITEN",
+    skill1_name: "Web-Audit",
+    skill1_desc: "HTTP-Header-Analyse, HTTPS-Prüfung, CSP-, HSTS-, Clickjacking- und MIME-Sniffing-Erkennung.",
+    skill2_desc: "Automatisierung von Sicherheitsaufgaben, Scan-Skripte, Datenanalyse und Audit-Tools.",
+    skill3_name: "ISO-Frameworks",
+    skill3_desc: "Interner Auditor ISO/IEC 27001:2013. Risikomanagement, Kontrollen und sichere Designprinzipien.",
+    skill4_name: "Netzwerke",
+    skill4_desc: "Netzwerksicherheit, Port-Scanning, Traffic-Analyse und sichere Dienstkonfiguration.",
+    skill5_desc: "Linux-Systemadministration, Terminal-Sicherheitstools, Bash-Scripting.",
+    skill6_desc: "Blockchain-Grundlagen, Kryptowährungen und Sicherheit in dezentralen Umgebungen.",
+    projects_title: "PROJEKTE",
+    projects_title2: "PORTFOLIO",
+    proj1_name: "Web-Sicherheitsanalyzer",
+    proj1_desc: "Python-Tool zur Prüfung von Websites auf HTTP-Header-Schwachstellen.",
+    proj1_tag: "Web-Audit",
+    proj2_name: "Passwort-Checker",
+    proj2_desc: "Passwort-Stärkeanalysator mit Bewertung von 0 bis 7.",
+    proj3_name: "Port-Scanner",
+    proj3_desc: "Netzwerk-Reconnaissance-Tool zum Scannen gängiger Ports auf jedem Host.",
+    proj_link: "Code ansehen →",
+    certs_title: "ZERTIFIKATE",
+    cert1_name: "Spezialisierungsprogramm Cybersicherheit",
+    cert2_name: "Introduction to Cybersecurity",
+    cert3_name: "Interner Auditor ISO/IEC 27001:2013",
+    cert4_name: "Cybersicherheit für Kleinunternehmen",
+    cert6_name: "Cybersicherheit",
+    contact_title: "KONTAKT",
+    contact_h3: "IST IHRE WEBSITE <span>SICHER</span>?",
+    contact_p: "Ich biete grundlegende Web-Sicherheitsaudits für kleine und mittlere Unternehmen an.",
+    footer_rights: "Alle Rechte vorbehalten",
+    footer_role: "NYX POLARIS",
+  },
+  fr: {
+    region_americas: "Les Amériques",
+    region_europe: "Europe",
+    nav_about: "Profil",
+    nav_skills: "Compétences",
+    nav_projects: "Projets",
+    nav_certs: "Certifs",
+    nav_contact: "Contact",
+    hero_eyebrow: "// Analyste Junior en Cybersécurité",
+    hero_title: "Sécurité Web // Audit // Python",
+    hero_desc: "Je trouve les vulnérabilités avant que d'autres ne les exploitent. Analyste junior avec vision offensive et focus défensif.",
+    btn_projects: "Voir les Projets",
+    btn_contact: "Contacter",
+    scroll: "Défiler",
+    about_title: "À PROPOS",
+    about_title2: "DE MOI",
+    about_p1: 'Étudiant en <strong>Génie de la Sécurité de l\'Information</strong> avec plus de 6 certifications internationales en cybersécurité.',
+    about_p2: "Mon approche est directe: j'analyse votre infrastructure, je trouve les points faibles et je fournis un rapport clair avec des solutions concrètes.",
+    about_p3: 'Spécialisé en <strong>audit web</strong>, analyse de vulnérabilités et automatisation de la sécurité avec <strong>Python</strong>.',
+    stat_certs: "Certifications",
+    stat_tools: "Outils propres",
+    skills_title: "COMPÉTENCES",
+    skills_title2: "TECHNIQUES",
+    skill1_name: "Audit Web",
+    skill1_desc: "Analyse des en-têtes HTTP, vérification HTTPS, détection CSP, HSTS, clickjacking et MIME sniffing.",
+    skill2_desc: "Automatisation des tâches de sécurité, scripts de scan, analyse de données et outils d'audit.",
+    skill3_name: "Cadres ISO",
+    skill3_desc: "Auditeur Interne ISO/IEC 27001:2013. Gestion des risques, contrôles et principes de conception sécurisée.",
+    skill4_name: "Réseaux",
+    skill4_desc: "Sécurité des réseaux, scan de ports, analyse du trafic et configuration sécurisée des services.",
+    skill5_desc: "Administration de systèmes Linux, outils de sécurité en terminal, scripting bash.",
+    skill6_desc: "Fondamentaux de la blockchain, cryptomonnaies et sécurité dans les environnements décentralisés.",
+    projects_title: "PROJETS",
+    projects_title2: "PORTFOLIO",
+    proj1_name: "Analyseur de Sécurité Web",
+    proj1_desc: "Outil Python qui audite les sites web en détectant les vulnérabilités dans les en-têtes HTTP.",
+    proj1_tag: "Audit Web",
+    proj2_name: "Vérificateur de Mots de Passe",
+    proj2_desc: "Analyseur de force des mots de passe avec score de 0 à 7.",
+    proj3_name: "Scanner de Ports",
+    proj3_desc: "Outil de reconnaissance réseau qui scanne les ports courants sur n'importe quel hôte.",
+    proj_link: "Voir le code →",
+    certs_title: "CERTIFICATIONS",
+    cert1_name: "Programme Spécialisé en Cybersécurité",
+    cert2_name: "Introduction to Cybersecurity",
+    cert3_name: "Auditeur Interne ISO/IEC 27001:2013",
+    cert4_name: "Cybersécurité pour Micro-Entreprises",
+    cert6_name: "Cybersécurité",
+    contact_title: "CONTACT",
+    contact_h3: "VOTRE SITE <span>EST-IL</span> SÉCURISÉ?",
+    contact_p: "J'offre des audits de sécurité web de base pour les petites et moyennes entreprises.",
+    footer_rights: "Tous droits réservés",
+    footer_role: "NYX POLARIS",
+  },
+  it: {
+    region_americas: "Le Americhe",
+    region_europe: "Europa",
+    nav_about: "Profilo",
+    nav_skills: "Competenze",
+    nav_projects: "Progetti",
+    nav_certs: "Certif.",
+    nav_contact: "Contatto",
+    hero_eyebrow: "// Analista Junior in Cybersecurity",
+    hero_title: "Sicurezza Web // Audit // Python",
+    hero_desc: "Trovo le vulnerabilità prima che altri le sfruttino. Analista junior con visione offensiva e focus difensivo.",
+    btn_projects: "Vedi Progetti",
+    btn_contact: "Contattare",
+    scroll: "Scorri",
+    about_title: "SU",
+    about_title2: "DI ME",
+    about_p1: 'Studente di <strong>Ingegneria della Sicurezza delle Informazioni</strong> con oltre 6 certificazioni internazionali in cybersecurity.',
+    about_p2: "Il mio approccio è diretto: analizzo la tua infrastruttura, trovo i punti deboli e consegno un rapporto chiaro con soluzioni concrete.",
+    about_p3: 'Specializzato in <strong>audit web</strong>, analisi delle vulnerabilità e automazione della sicurezza con <strong>Python</strong>.',
+    stat_certs: "Certificazioni",
+    stat_tools: "Strumenti propri",
+    skills_title: "COMPETENZE",
+    skills_title2: "TECNICHE",
+    skill1_name: "Audit Web",
+    skill1_desc: "Analisi delle intestazioni HTTP, verifica HTTPS, rilevamento CSP, HSTS, clickjacking e MIME sniffing.",
+    skill2_desc: "Automazione dei task di sicurezza, script di scansione, analisi dati e strumenti di audit.",
+    skill3_name: "Framework ISO",
+    skill3_desc: "Auditor Interno ISO/IEC 27001:2013. Gestione dei rischi, controlli e principi di progettazione sicura.",
+    skill4_name: "Reti",
+    skill4_desc: "Sicurezza delle reti, scansione delle porte, analisi del traffico e configurazione sicura dei servizi.",
+    skill5_desc: "Amministrazione di sistemi Linux, strumenti di sicurezza nel terminale, scripting bash.",
+    skill6_desc: "Fondamenti di blockchain, criptovalute e sicurezza in ambienti decentralizzati.",
+    projects_title: "PROGETTI",
+    projects_title2: "PORTFOLIO",
+    proj1_name: "Analizzatore di Sicurezza Web",
+    proj1_desc: "Strumento Python che audita siti web rilevando vulnerabilità nelle intestazioni HTTP.",
+    proj1_tag: "Audit Web",
+    proj2_name: "Verificatore di Password",
+    proj2_desc: "Analizzatore di forza delle password con punteggio da 0 a 7.",
+    proj3_name: "Scanner di Porte",
+    proj3_desc: "Strumento di ricognizione di rete che scansiona le porte comuni su qualsiasi host.",
+    proj_link: "Vedi codice →",
+    certs_title: "CERTIFICAZIONI",
+    cert1_name: "Programma Specializzato in Cybersecurity",
+    cert2_name: "Introduction to Cybersecurity",
+    cert3_name: "Auditor Interno ISO/IEC 27001:2013",
+    cert4_name: "Cybersecurity per Microimprese",
+    cert6_name: "Cybersecurity",
+    contact_title: "CONTATTO",
+    contact_h3: "IL TUO SITO <span>È</span> SICURO?",
+    contact_p: "Offro audit di sicurezza web di base per piccole e medie imprese.",
+    footer_rights: "Tutti i diritti riservati",
+    footer_role: "NYX POLARIS",
+  },
+  ru: {
+    region_americas: "Америка",
+    region_europe: "Европа",
+    nav_about: "Профиль",
+    nav_skills: "Навыки",
+    nav_projects: "Проекты",
+    nav_certs: "Серт.",
+    nav_contact: "Контакт",
+    hero_eyebrow: "// Младший аналитик кибербезопасности",
+    hero_title: "Веб-безопасность // Аудит // Python",
+    hero_desc: "Нахожу уязвимости раньше, чем их эксплуатируют другие. Младший аналитик с наступательным мышлением и оборонительным фокусом.",
+    btn_projects: "Смотреть Проекты",
+    btn_contact: "Связаться",
+    scroll: "Прокрутить",
+    about_title: "ОБО",
+    about_title2: "МНЕ",
+    about_p1: 'Студент <strong>Информационной Безопасности</strong> с более чем 6 международными сертификатами в области кибербезопасности.',
+    about_p2: "Мой подход прямой: анализирую вашу инфраструктуру, нахожу слабые места и предоставляю чёткий отчёт с конкретными решениями.",
+    about_p3: 'Специализируюсь на <strong>веб-аудите</strong>, анализе уязвимостей и автоматизации безопасности с <strong>Python</strong>.',
+    stat_certs: "Сертификаты",
+    stat_tools: "Собственные инструменты",
+    skills_title: "ТЕХНИЧЕСКИЕ",
+    skills_title2: "НАВЫКИ",
+    skill1_name: "Веб-аудит",
+    skill1_desc: "Анализ HTTP-заголовков, проверка HTTPS, обнаружение CSP, HSTS, clickjacking и MIME-sniffing.",
+    skill2_desc: "Автоматизация задач безопасности, скрипты сканирования, анализ данных и инструменты аудита.",
+    skill3_name: "ISO-фреймворки",
+    skill3_desc: "Внутренний аудитор ISO/IEC 27001:2013. Управление рисками, контроли и принципы безопасного проектирования.",
+    skill4_name: "Сети",
+    skill4_desc: "Сетевая безопасность, сканирование портов, анализ трафика и безопасная настройка сервисов.",
+    skill5_desc: "Администрирование систем Linux, инструменты безопасности в терминале, bash-скриптинг.",
+    skill6_desc: "Основы блокчейна, криптовалюты и безопасность в децентрализованных средах.",
+    projects_title: "ПРОЕКТЫ",
+    projects_title2: "ПОРТФОЛИО",
+    proj1_name: "Анализатор Веб-Безопасности",
+    proj1_desc: "Инструмент Python для аудита веб-сайтов с обнаружением уязвимостей в HTTP-заголовках.",
+    proj1_tag: "Веб-аудит",
+    proj2_name: "Проверка Паролей",
+    proj2_desc: "Анализатор надёжности паролей с оценкой от 0 до 7.",
+    proj3_name: "Сканер Портов",
+    proj3_desc: "Инструмент сетевой разведки для сканирования общих портов на любом хосте.",
+    proj_link: "Смотреть код →",
+    certs_title: "СЕРТИФИКАТЫ",
+    cert1_name: "Специализированная программа по кибербезопасности",
+    cert2_name: "Introduction to Cybersecurity",
+    cert3_name: "Внутренний аудитор ISO/IEC 27001:2013",
+    cert4_name: "Кибербезопасность для микробизнеса",
+    cert6_name: "Кибербезопасность",
+    contact_title: "КОНТАКТ",
+    contact_h3: "ВАШ САЙТ <span>ЗАЩИЩЁН</span>?",
+    contact_p: "Предлагаю базовые аудиты веб-безопасности для малого и среднего бизнеса.",
+    footer_rights: "Все права защищены",
+    footer_role: "NYX POLARIS",
+  },
+  pl: {
+    region_americas: "Ameryki",
+    region_europe: "Europa",
+    nav_about: "Profil",
+    nav_skills: "Umiejętności",
+    nav_projects: "Projekty",
+    nav_certs: "Certyfikaty",
+    nav_contact: "Kontakt",
+    hero_eyebrow: "// Młodszy analityk cyberbezpieczeństwa",
+    hero_title: "Bezpieczeństwo Web // Audyt // Python",
+    hero_desc: "Znajduję luki zanim inni je wykorzystają. Młodszy analityk z ofensywnym myśleniem i defensywnym podejściem.",
+    btn_projects: "Zobacz Projekty",
+    btn_contact: "Kontakt",
+    scroll: "Przewiń",
+    about_title: "O",
+    about_title2: "MNIE",
+    about_p1: 'Student <strong>Inżynierii Bezpieczeństwa Informacji</strong> z ponad 6 międzynarodowymi certyfikatami w cyberbezpieczeństwie.',
+    about_p2: "Moje podejście jest bezpośrednie: analizuję infrastrukturę, szukam słabych punktów i dostarczam jasny raport z konkretnymi rozwiązaniami.",
+    about_p3: 'Specjalizacja w <strong>audycie web</strong>, analizie podatności i automatyzacji bezpieczeństwa z <strong>Python</strong>.',
+    stat_certs: "Certyfikaty",
+    stat_tools: "Własne narzędzia",
+    skills_title: "UMIEJĘTNOŚCI",
+    skills_title2: "TECHNICZNE",
+    skill1_name: "Audyt Web",
+    skill1_desc: "Analiza nagłówków HTTP, weryfikacja HTTPS, wykrywanie CSP, HSTS, clickjacking i MIME sniffing.",
+    skill2_desc: "Automatyzacja zadań bezpieczeństwa, skrypty skanowania, analiza danych i narzędzia audytowe.",
+    skill3_name: "Ramy ISO",
+    skill3_desc: "Audytor Wewnętrzny ISO/IEC 27001:2013. Zarządzanie ryzykiem, kontrole i zasady bezpiecznego projektowania.",
+    skill4_name: "Sieci",
+    skill4_desc: "Bezpieczeństwo sieci, skanowanie portów, analiza ruchu i bezpieczna konfiguracja usług.",
+    skill5_desc: "Administracja systemami Linux, narzędzia bezpieczeństwa w terminalu, skrypty bash.",
+    skill6_desc: "Podstawy blockchain, kryptowaluty i bezpieczeństwo w środowiskach zdecentralizowanych.",
+    projects_title: "PROJEKTY",
+    projects_title2: "PORTFOLIO",
+    proj1_name: "Analizator Bezpieczeństwa Web",
+    proj1_desc: "Narzędzie Python do audytu stron wykrywające podatności w nagłówkach HTTP.",
+    proj1_tag: "Audyt Web",
+    proj2_name: "Weryfikator Haseł",
+    proj2_desc: "Analizator siły haseł z oceną od 0 do 7.",
+    proj3_name: "Skaner Portów",
+    proj3_desc: "Narzędzie rozpoznania sieci skanujące popularne porty na dowolnym hoście.",
+    proj_link: "Zobacz kod →",
+    certs_title: "CERTYFIKATY",
+    cert1_name: "Specjalistyczny Program Cyberbezpieczeństwa",
+    cert2_name: "Introduction to Cybersecurity",
+    cert3_name: "Audytor Wewnętrzny ISO/IEC 27001:2013",
+    cert4_name: "Cyberbezpieczeństwo dla Mikroprzedsiębiorstw",
+    cert6_name: "Cyberbezpieczeństwo",
+    contact_title: "KONTAKT",
+    contact_h3: "CZY TWOJA STRONA <span>JEST</span> BEZPIECZNA?",
+    contact_p: "Oferuję podstawowe audyty bezpieczeństwa web dla małych i średnich przedsiębiorstw.",
+    footer_rights: "Wszelkie prawa zastrzeżone",
+    footer_role: "NYX POLARIS",
+  },
+  ar: {
+    region_americas: "الأمريكتان",
+    region_europe: "أوروبا",
+    nav_about: "الملف",
+    nav_skills: "المهارات",
+    nav_projects: "المشاريع",
+    nav_certs: "الشهادات",
+    nav_contact: "تواصل",
+    hero_eyebrow: "// محلل أمن سيبراني مبتدئ",
+    hero_title: "أمن الويب // التدقيق // Python",
+    hero_desc: "أجد الثغرات قبل أن يستغلها الآخرون. محلل مبتدئ بتفكير هجومي وتركيز دفاعي.",
+    btn_projects: "عرض المشاريع",
+    btn_contact: "تواصل معي",
+    scroll: "مرر",
+    about_title: "نبذة",
+    about_title2: "عني",
+    about_p1: 'طالب <strong>هندسة أمن المعلومات</strong> مع أكثر من 6 شهادات دولية في الأمن السيبراني.',
+    about_p2: "نهجي مباشر: أحلل بنيتك التحتية، أجد نقاط الضعف، وأقدم تقريراً واضحاً مع حلول ملموسة.",
+    about_p3: 'متخصص في <strong>تدقيق الويب</strong>، تحليل الثغرات، وأتمتة الأمان بـ <strong>Python</strong>.',
+    stat_certs: "شهادات",
+    stat_tools: "أدوات مطورة",
+    skills_title: "المهارات",
+    skills_title2: "التقنية",
+    skill1_name: "تدقيق الويب",
+    skill1_desc: "تحليل رؤوس HTTP، التحقق من HTTPS، اكتشاف CSP وHSTS والنقر الاحتيالي وتشمم MIME.",
+    skill2_desc: "أتمتة مهام الأمان، سكريبتات المسح، تحليل البيانات وأدوات التدقيق.",
+    skill3_name: "أطر ISO",
+    skill3_desc: "مدقق داخلي ISO/IEC 27001:2013. إدارة المخاطر والضوابط ومبادئ التصميم الآمن.",
+    skill4_name: "الشبكات",
+    skill4_desc: "أمان الشبكات، مسح المنافذ، تحليل الحركة والتكوين الآمن للخدمات.",
+    skill5_desc: "إدارة أنظمة Linux، أدوات الأمان في الطرفية، سكريبتات bash.",
+    skill6_desc: "أسس البلوكتشين والعملات المشفرة والأمان في البيئات اللامركزية.",
+    projects_title: "المشاريع",
+    projects_title2: "المحفظة",
+    proj1_name: "محلل أمن الويب",
+    proj1_desc: "أداة Python لتدقيق المواقع واكتشاف ثغرات رؤوس HTTP.",
+    proj1_tag: "تدقيق الويب",
+    proj2_name: "فاحص كلمات المرور",
+    proj2_desc: "محلل قوة كلمات المرور بتقييم من 0 إلى 7.",
+    proj3_name: "ماسح المنافذ",
+    proj3_desc: "أداة استطلاع شبكي لمسح المنافذ الشائعة على أي مضيف.",
+    proj_link: "عرض الكود →",
+    certs_title: "الشهادات",
+    cert1_name: "برنامج متخصص في الأمن السيبراني",
+    cert2_name: "مقدمة إلى الأمن السيبراني",
+    cert3_name: "مدقق داخلي ISO/IEC 27001:2013",
+    cert4_name: "الأمن السيبراني للشركات الصغيرة",
+    cert6_name: "الأمن السيبراني",
+    contact_title: "تواصل",
+    contact_h3: "هل موقعك <span>آمن</span>؟",
+    contact_p: "أقدم تدقيقات أمان ويب أساسية للشركات الصغيرة والمتوسطة.",
+    footer_rights: "جميع الحقوق محفوظة",
+    footer_role: "NYX POLARIS",
+  }
+};
+
+let currentLang = 'es';
+
+// [FIX 8] Sanitizador de HTML — previene XSS en las traducciones
+// El método innerHTML ejecutaría cualquier <script> o handler inyectado.
+// Esta función permite SOLO <strong> y <span> — nada más.
+function safeSanitize(html) {
+  const allowed = { strong: [], span: ['class'] };
+  const tmp = document.createElement('div');
+  tmp.textContent = html; // primero escape todo
+  // Reintroduce solo las etiquetas permitidas usando regex controlada
+  let safe = html
+    .replace(/</g, '\x00LT\x00')
+    .replace(/>/g, '\x00GT\x00');
+  // Permitir <strong>...</strong>
+  safe = safe.replace(/\x00LT\x00strong\x00GT\x00(.*?)\x00LT\x00\/strong\x00GT\x00/g, '<strong>$1</strong>');
+  // Permitir <span>...</span> y <span class="...">
+  safe = safe.replace(/\x00LT\x00span\x00GT\x00(.*?)\x00LT\x00\/span\x00GT\x00/g, '<span>$1</span>');
+  // Resto: decodificar como texto plano
+  safe = safe.replace(/\x00LT\x00/g, '&lt;').replace(/\x00GT\x00/g, '&gt;');
+  return safe;
+}
+
+function toggleLangMenu() {
+  const btn = document.getElementById('langBtn');
+  const dropdown = document.getElementById('langDropdown');
+  btn.classList.toggle('open');
+  dropdown.classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  const selector = document.querySelector('.lang-selector');
+  if (!selector.contains(e.target)) {
+    document.getElementById('langBtn').classList.remove('open');
+    document.getElementById('langDropdown').classList.remove('open');
+  }
+});
+
+function setLang(lang) {
+  // [FIX 8b] Whitelist de idiomas válidos — evita prototype pollution
+  // Si se inyecta un lang='__proto__' podría contaminar el objeto global
+  const validLangs = ['es','en','pt','de','fr','it','ru','pl','ar'];
+  if (!validLangs.includes(lang) || !translations[lang]) return;
+  currentLang = lang;
+  const t = translations[lang];
+
+  // RTL support for Arabic
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+  // [FIX 8c] Usar safeSanitize en lugar de innerHTML directo
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (Object.prototype.hasOwnProperty.call(t, key)) {
+      el.innerHTML = safeSanitize(t[key]);
+    }
+  });
+
+  // Update lang button label — textContent (seguro, no interpreta HTML)
+  const labels = {es:'ES', en:'EN', pt:'PT', de:'DE', fr:'FR', it:'IT', ru:'RU', pl:'PL', ar:'AR'};
+  document.getElementById('langCurrent').textContent = labels[lang] || 'ES';
+
+  // Mark active option
+  document.querySelectorAll('.lang-option').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-lang-code') === lang);
+  });
+
+  // Close dropdown
+  document.getElementById('langBtn').classList.remove('open');
+  document.getElementById('langDropdown').classList.remove('open');
+}
+
+// ── EMAIL OBFUSCATION (OPSEC) ──
+// El email NUNCA existe en texto plano en el DOM ni en el HTML fuente.
+// Se ensambla en runtime desde partes separadas, dificultando scraping automatizado.
+// Los bots que leen el HTML estático solo ven data-p="Nyx_polaris" y data-p="outlook.es"
+// sin el símbolo @ ni la dirección completa unida.
+(function() {
+  const parts = document.querySelectorAll('.email-part');
+  if (parts.length < 2) return;
+  const user = parts[0].getAttribute('data-p');
+  const domain = parts[1].getAttribute('data-p');
+  const full = user + '\u0040' + domain; // \u0040 = @, evita indexado literal
+
+  // Render visual con separador anti-scraping reemplazado
+  parts[0].textContent = user;
+  document.querySelector('.email-sep').textContent = '@';
+  parts[1].textContent = domain;
+
+  // Click: copiar al portapapeles y abrir cliente de correo
+  const box = document.getElementById('emailBox');
+  const hint = document.getElementById('emailHint');
+  if (box) {
+    box.addEventListener('click', function() {
+      // Intentar copiar
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(full).then(() => {
+          hint.textContent = '✓ copiado al portapapeles';
+          hint.classList.add('email-copied');
+          setTimeout(() => {
+            hint.textContent = '// click para copiar / abrir';
+            hint.classList.remove('email-copied');
+          }, 2500);
+        });
+      }
+      // También abrir mailto
+      window.location.href = 'mailto:' + full;
+    });
+    box.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') box.click();
+    });
+  }
+})();
+// Los onclick inline en HTML son un vector XSS y violan CSP estricta
+document.getElementById('langBtn').addEventListener('click', toggleLangMenu);
+document.querySelectorAll('.lang-option').forEach(btn => {
+  btn.addEventListener('click', function() {
+    setLang(this.getAttribute('data-lang-code'));
+  });
+});
+
+// ── NAV TOGGLE (hamburger menu) ──
+const navToggle = document.getElementById('navToggle');
+const navLinks = document.getElementById('navLinks');
+
+if (navToggle) {
+  navToggle.addEventListener('click', () => {
+    const open = navLinks.classList.toggle('open');
+    navToggle.classList.toggle('open', open);
+    navToggle.setAttribute('aria-expanded', open);
+    // Prevent body scroll when menu is open
+    document.body.style.overflow = open ? 'hidden' : '';
+  });
+  // Close on nav link click
+  navLinks.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      navLinks.classList.remove('open');
+      navToggle.classList.remove('open');
+      navToggle.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    });
+  });
+}
+
+// Cursor — only on non-touch devices
+const isPointerFine = window.matchMedia('(pointer: fine)').matches;
+const cursor = document.getElementById('cursor');
+const dot = document.getElementById('cursorDot');
+let mx = 0, my = 0, cx = 0, cy = 0;
+
+if (isPointerFine && cursor && dot) {
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animCursor() {
+    cx += (mx - cx) * 0.15;
+    cy += (my - cy) * 0.15;
+    cursor.style.left = cx + 'px';
+    cursor.style.top = cy + 'px';
+    dot.style.left = mx + 'px';
+    dot.style.top = my + 'px';
+    requestAnimationFrame(animCursor);
+  }
+  animCursor();
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.style.transform = 'translate(-50%,-50%) scale(2)');
+    el.addEventListener('mouseleave', () => cursor.style.transform = 'translate(-50%,-50%) scale(1)');
+  });
+}
+
+// Fog canvas
+const canvas = document.getElementById('fog-canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const particles = [];
+for (let i = 0; i < 60; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 120 + 40,
+    vx: (Math.random() - 0.5) * 0.3,
+    vy: (Math.random() - 0.5) * 0.2,
+    alpha: Math.random() * 0.06 + 0.01
+  });
+}
+
+function drawFog() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+    g.addColorStop(0, `rgba(255,107,0,${p.alpha})`);
+    g.addColorStop(1, 'rgba(255,107,0,0)');
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < -p.r) p.x = canvas.width + p.r;
+    if (p.x > canvas.width + p.r) p.x = -p.r;
+    if (p.y < -p.r) p.y = canvas.height + p.r;
+    if (p.y > canvas.height + p.r) p.y = -p.r;
+  });
+  requestAnimationFrame(drawFog);
+}
+drawFog();
+
+// [FIX 10] Debounce en resize del canvas
+// Sin debounce, redimensionar la ventana rápido crea cientos de
+// reasignaciones de memoria en ms (mini-DoS del lado cliente)
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }, 150);
+});
+
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 100);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(r => obs.observe(r));
+</script>
+</body>
+</html>
